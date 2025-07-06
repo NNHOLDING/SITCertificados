@@ -1,43 +1,52 @@
 import streamlit as st
+from datetime import datetime, date
+import pytz
 import gspread
-from google.oauth2.service_account import Credentials
-from datetime import datetime
+from oauth2client.service_account import ServiceAccountCredentials
 
-def guardar_en_google_sheets(fecha_lote, codigo_seleccionado, nombre_empleado, hora):
-    # Definir el alcance de acceso
-    scope = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive"
-    ]
+# Configuración de la aplicación
+st.set_page_config(page_title="Alisto Unimar", layout="centered")
+st.title("Formulario - Alisto Unimar")
+st.markdown("Por favor completa los siguientes datos:")
 
-    # Obtener credenciales desde st.secrets
-    creds_dict = st.secrets["google_sheets"]
-    creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
+# 📍 Zona horaria de Costa Rica
+zona_cr = pytz.timezone("America/Costa_Rica")
 
-    # Autorizar cliente de Google Sheets
-    client = gspread.authorize(creds)
+# 🚚 Lista de placas
+placas = [
+    "200", "201", "202", "203", "204", "205", "206", "207", "208", "209", "210", "211", "212", "213", "214", "215", "216", "216", "218",
+    "300", "301", "302", "303", "304", "305", "306", "307", "308", "309", "310", "311", "312", "313", "314", "315", "316", "317", "318",
+    "400", "401", "402", "403", "404", "405", "406", "407", "408", "409", "410", "411", "412", "413",
+    "500", "505", "506", "507", "508", "509", "510", "511", "512", "513",
+    "F01", "F02", "F03", "F04", "F05", "F06", "F07", "F08", "F09", "F10",
+    "POZUELO", "SIGMA", "COMAPAN", "MAFAM", "MEGASUPER", "AUTOMERCADO",
+    "DEMASA", "INOLASA", "EXPORTACION UNIMAR", "HILLTOP", "SAM", "CARTAINESA", "AUTODELI", "WALMART", "PRICSMART"
+]
 
-    # Abrir hoja de cálculo por URL y seleccionar la pestaña
-    sheet = client.open_by_url("https://docs.google.com/spreadsheets/d/1RsNWb6CwsKd6xt-NffyUDmVgDOgqSo_wgR863Mxje30/edit#gid=1441343050")
-    worksheet = sheet.worksheet("TCertificados")
+# 🔐 Autenticación con Google Sheets
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+service_account_info = st.secrets["gcp_service_account"]
+credentials = ServiceAccountCredentials.from_json_keyfile_dict(service_account_info, scope)
+client = gspread.authorize(credentials)
+sheet = client.open_by_key("1o-GozoYaU_4Ra2KgX05Yi4biDV9zcd6BGdqOdSxKAv0").sheet1
 
-    # Agregar fila con los datos
-    nueva_fila = [str(fecha_lote), str(codigo_seleccionado), nombre_empleado, str(hora)]
-    worksheet.append_row(nueva_fila)
+# 📋 Formulario
+with st.form("formulario_registro"):
+    fecha = st.date_input("Fecha", value=date.today())
+    placa = st.selectbox("Placa", placas)
+    
+    enviado = st.form_submit_button("Enviar")
 
-    st.success("✅ Datos guardados correctamente en la hoja 'TCertificados'.")
+    if enviado:
+        # 🕒 Captura de hora en zona de Costa Rica
+        hora_actual = datetime.now(zona_cr).strftime("%H:%M:%S")
 
-# Interfaz de usuario con Streamlit
-def main():
-    st.title("📋 Registro en Google Sheets")
+        # 📤 Enviar a Google Sheets
+        sheet.append_row([str(fecha), placa, hora_actual, hora_actual])
 
-    fecha_lote = st.date_input("📅 Fecha del lote")
-    codigo_seleccionado = st.text_input("🔢 Código seleccionado")
-    nombre_empleado = st.text_input("👤 Nombre del empleado")
-    hora = st.time_input("⏰ Hora")
-
-    if st.button("Guardar en Google Sheets"):
-        guardar_en_google_sheets(fecha_lote, codigo_seleccionado, nombre_empleado, hora)
-
-if __name__ == "__main__":
-    main()
+        # ✅ Confirmación
+        st.success("✅ Datos enviados exitosamente a Google Sheets")
+        st.write(f"📅 Fecha: {fecha}")
+        st.write(f"🚛 Placa: {placa}")
+        st.write(f"🕐 Hora de inicio (CR): {hora_actual}")
+        st.write(f"🕓 Hora de fin (CR): {hora_actual}")
