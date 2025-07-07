@@ -28,7 +28,9 @@ scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/au
 service_account_info = st.secrets["gcp_service_account"]
 credentials = ServiceAccountCredentials.from_json_keyfile_dict(service_account_info, scope)
 client = gspread.authorize(credentials)
-sheet = client.open_by_key("1o-GozoYaU_4Ra2KgX05Yi4biDV9zcd6BGdqOdSxKAv0").sheet1
+
+# ✅ Acceso a la hoja de cálculo y pestaña correcta
+sheet = client.open_by_url("https://docs.google.com/spreadsheets/d/1RsNWb6CwsKd6xt-NffyUDmVgDOgqSo_wgR863Mxje30/edit").worksheet("TCertificados")
 
 # 📋 Formulario
 with st.form("formulario_registro"):
