@@ -36,7 +36,8 @@ sheet = client.open_by_url("https://docs.google.com/spreadsheets/d/1RsNWb6CwsKd6
 with st.form("formulario_registro"):
     fecha = st.date_input("Fecha", value=date.today())
     placa = st.selectbox("Placa", placas)
-    
+    cantidad = st.number_input("Cantidad", min_value=1, step=1)
+
     enviado = st.form_submit_button("Enviar")
 
     if enviado:
@@ -44,11 +45,12 @@ with st.form("formulario_registro"):
         hora_actual = datetime.now(zona_cr).strftime("%H:%M:%S")
 
         # 📤 Enviar a Google Sheets
-        sheet.append_row([str(fecha), placa, hora_actual, hora_actual])
+        sheet.append_row([str(fecha), placa, cantidad, hora_actual, hora_actual])
 
         # ✅ Confirmación
         st.success("✅ Datos enviados exitosamente a Google Sheets")
         st.write(f"📅 Fecha: {fecha}")
         st.write(f"🚛 Placa: {placa}")
+        st.write(f"📦 Cantidad: {cantidad}")
         st.write(f"🕐 Hora de inicio (CR): {hora_actual}")
         st.write(f"🕓 Hora de fin (CR): {hora_actual}")
